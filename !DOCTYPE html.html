@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Village Market</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body { font-family: Arial; padding:20px; background:#eef1f5; }
+.card { background:#fff; padding:20px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); max-width:900px; margin:auto; margin-top:20px;}
+button { padding:10px 20px; border:none; border-radius:6px; cursor:pointer; margin:10px;}
+#loginBox input { width:100%; padding:12px; margin:10px 0; }
+.btn { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; color:white; margin:2px;}
+.accept { background:#2e7d32; }
+.reject { background:#c62828; }
+.complete { background:#1565c0; }
+table { width:100%; border-collapse:collapse; margin-top:20px; }
+th, td { padding:10px; border:1px solid #ccc; }
+</style>
+</head>
+<body>
+
+<!-- Landing Options -->
+<div class="card" id="landing">
+    <h2>Welcome to Village Market</h2>
+    <button onclick="showUser()">User Login</button>
+    <button onclick="showAdmin()">Admin Login</button>
+</div>
+
+<!-- Admin Panel -->
+<div class="card" id="adminBox" style="display:none;">
+    <h2>Admin Login</h2>
+    <input id="adminPass" type="password" placeholder="Enter admin password">
+    <button class="btn accept" onclick="loginAdmin()">Login</button>
+    <p style="color:red; display:none;" id="loginError">Incorrect password</p>
+
+    <div id="adminPanel" style="display:none;">
+        <h2>All Orders</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Category</th>
+                    <th>Items</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="orderTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- User Panel -->
+<div class="card" id="userBox" style="display:none;">
+    <a href="index.html" class="btn"><i class="fa-solid fa-carrot"></i> User</a>
+</div>
+
+<script>
+// Show user view
+function showUser() {
+    document.getElementById('landing').style.display = 'none';
+    document.getElementById('userBox').style.display = 'block';
+}
+
+// Show admin login
+function showAdmin() {
+    document.getElementById('landing').style.display = 'none';
+    document.getElementById('adminBox').style.display = 'block';
+}
+
+// Admin login logic
+function loginAdmin() {
+    const pass = document.getElementById("adminPass").value;
+    if(pass !== "admin123") {
+        document.getElementById("loginError").style.display = "block";
+        return;
+    }
+    document.getElementById("loginError").style.display = "none";
+    document.getElementById("adminPanel").style.display = "block";
+    loadOrders();
+}
+
+// Load orders from localStorage
+function loadOrders() {
+    let orders = JSON.parse(localStorage.getItem("orders")) || [];
+    let table = document.getElementById("orderTable");
+    table.innerHTML = "";
+
+    orders.forEach((order, i) => {
+        let row = `
+        <tr>
+            <td>${order.name}</td>
+            <td>${order.phone}</td>
+            <td>${order.category}</td>
+            <td>${order.items}</td>
+            <td>${order.time}</td>
+            <td>${order.status}</td>
+            <td>
+                <button class="btn accept" onclick="updateStatus(${i}, 'Accepted')">Accept</button>
+                <button class="btn reject" onclick="updateStatus(${i}, 'Rejected')">Reject</button>
+                <button class="btn complete" onclick="updateStatus(${i}, 'Completed')">Complete</button>
+            </td>
+        </tr>`;
+        table.innerHTML += row;
+    });
+}
+
+// Update order status
+function updateStatus(id, status) {
+    let orders = JSON.parse(localStorage.getItem("orders")) || [];
+    orders[id].status = status;
+    localStorage.setItem("orders", JSON.stringify(orders));
+    loadOrders();
+}
+</script>
+
+</body>
+</html>
