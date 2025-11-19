@@ -1,146 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Village Market - Landing</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body { font-family: Arial; padding:20px; background:#eef1f5; }
-.card { background:#fff; padding:20px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); max-width:900px; margin:auto; margin-top:20px;}
-button { padding:10px 20px; border:none; border-radius:6px; cursor:pointer; margin:10px;}
-#loginBox input { width:100%; padding:12px; margin:10px 0; }
-.btn { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; color:white; margin:2px;}
-.accept { background:#2e7d32; }
-.reject { background:#c62828; }
-.complete { background:#1565c0; }
-table { width:100%; border-collapse:collapse; margin-top:20px; }
-th, td { padding:10px; border:1px solid #ccc; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Village Market – Order</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, textarea, select { width: 100%; margin: 10px 0; padding: 10px; }
+    button { padding: 12px; width: 100%; background: green; color: white; border: none; }
+  </style>
 </head>
+
 <body>
+  <h2>Place Your Order</h2>
 
-<!-- Landing Options -->
-<div class="card" id="landing">
-    <h2>Welcome to Village Market</h2>
-    <button onclick="window.location='user.html'">User Login</button>
-    <button onclick="showAdmin()">Admin Login</button>
-</div>
+  <input id="name" placeholder="Your Name" />
+  <input id="phone" placeholder="Phone Number" />
+  <select id="category">
+    <option value="">Select Category</option>
+    <option value="Vegetables">Vegetables</option>
+    <option value="Fruits">Fruits</option>
+  </select>
+  <textarea id="items" placeholder="Items (example: Tomato 1kg, Onion 2kg)"></textarea>
 
-<!-- Admin Box -->
-<div class="card" id="adminBox" style="display:none;">
-    <h2>Admin Login</h2>
-    <input id="adminPass" type="password" placeholder="Enter admin password">
-    <button class="btn accept" onclick="loginAdmin()">Login</button>
-    <p style="color:red; display:none;" id="loginError">Incorrect password</p>
+  <button onclick="submitOrder()">Submit Order</button>
 
-    <div id="adminPanel" style="display:none;">
-        <h2>All Orders</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Category</th>
-                    <th>Items</th>
-                    <th>Time</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="orderTable"></tbody>
-        </table>
-    </div>
-</div>
+  <script>
+    const API_URL = "PASTE_YOUR_DEPLOYMENT_URL_HERE";
 
-<script>
-// Show admin login page
-function showAdmin() {
-    document.getElementById('landing').style.display = 'none';
-    document.getElementById('adminBox').style.display = 'block';
-}
+    async function submitOrder() {
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const category = document.getElementById("category").value.trim();
+      const items = document.getElementById("items").value.trim();
 
-// Admin login
-function loginAdmin() {
-    const pass = document.getElementById("adminPass").value;
-    if(pass !== "admin123") {
-        document.getElementById("loginError").style.display = "block";
+      if (!name || !phone || !category || !items) {
+        alert("All fields are required.");
         return;
+      }
+
+      const payload = {
+        action: "insert",
+        name,
+        phone,
+        category,
+        items,
+        time: new Date().toLocaleString(),
+        status: "Pending"
+      };
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.result === "success") {
+          alert("Order submitted!");
+          document.getElementById("name").value = "";
+          document.getElementById("phone").value = "";
+          document.getElementById("category").value = "";
+          document.getElementById("items").value = "";
+        } else {
+          alert("Error submitting order.");
+          console.log(data);
+        }
+
+      } catch (err) {
+        console.log(err);
+        alert("Network error while submitting order.");
+      }
     }
-    document.getElementById("loginError").style.display = "none";
-    document.getElementById("adminPanel").style.display = "block";
-    loadOrders();
-}
-
-// Your correct Google Apps Script URL
-const API_URL = "https://script.google.com/macros/s/AKfycbzZ_n8d5kb6fk1UWuKF2dOS2-g4iC9nPtsj6bQvxIcszgGdTZv5zOM2WcuR2TBqfY5lNA/exec";
-
-// Load all orders from Google Sheets
-async function loadOrders() {
-  try {
-    const res = await fetch(API_URL);
-    if (!res.ok) throw new Error("Network response not ok: " + res.status);
-
-    const orders = await res.json();
-    const table = document.getElementById("orderTable");
-    table.innerHTML = "";
-
-    orders.forEach(order => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${escapeHtml(order.name)}</td>
-        <td>${escapeHtml(order.phone)}</td>
-        <td>${escapeHtml(order.category)}</td>
-        <td>${escapeHtml(order.items)}</td>
-        <td>${escapeHtml(order.time)}</td>
-        <td id="status-${order.rowNumber}">${escapeHtml(order.status)}</td>
-        <td>
-          <button class="btn accept" onclick="updateStatus(${order.rowNumber}, 'Accepted')">Accept</button>
-          <button class="btn reject" onclick="updateStatus(${order.rowNumber}, 'Rejected')">Reject</button>
-          <button class="btn complete" onclick="updateStatus(${order.rowNumber}, 'Completed')">Complete</button>
-        </td>
-      `;
-      table.appendChild(row);
-    });
-  } catch (err) {
-    console.error(err);
-    alert("Failed to load orders. See console for details.");
-  }
-}
-
-// Update status
-async function updateStatus(rowNumber, status) {
-  try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "update", rowNumber, status })
-    });
-
-    const data = await res.json();
-
-    if (data.result === "updated") {
-      document.getElementById(`status-${rowNumber}`).textContent = status;
-    } else {
-      alert("Update failed. Check console.");
-      console.log(data);
-    }
-
-  } catch (err) {
-    console.error(err);
-    alert("Network error while updating status.");
-  }
-}
-
-function escapeHtml(text) {
-  if (!text) return "";
-  return String(text)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-</script>
-
+  </script>
 </body>
 </html>
