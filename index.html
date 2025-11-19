@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Village Market</title>
+<title>Village Market - Landing</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body { font-family: Arial; padding:20px; background:#eef1f5; }
@@ -22,7 +22,7 @@ th, td { padding:10px; border:1px solid #ccc; }
 <!-- Landing Options -->
 <div class="card" id="landing">
     <h2>Welcome to Village Market</h2>
-    <button onclick="showUser()">User Login</button>
+    <button onclick="window.location='index.html'">User Login</button>
     <button onclick="showAdmin()">Admin Login</button>
 </div>
 
@@ -52,19 +52,7 @@ th, td { padding:10px; border:1px solid #ccc; }
     </div>
 </div>
 
-<!-- User Panel -->
-<div class="card" id="userBox" style="display:none;">
-    <h2>User View</h2>
-    <a href="home.html">Go to User Site</a>
-</div>
-
 <script>
-// Show user view
-function showUser() {
-    document.getElementById('landing').style.display = 'none';
-    document.getElementById('userBox').style.display = 'block';
-}
-
 // Show admin login
 function showAdmin() {
     document.getElementById('landing').style.display = 'none';
@@ -119,5 +107,3 @@ function updateStatus(id, status) {
 
 </body>
 </html>
-
-
