@@ -26,7 +26,7 @@ th, td { padding:10px; border:1px solid #ccc; }
     <button onclick="showAdmin()">Admin Login</button>
 </div>
 
-<!-- Admin Panel -->
+<!-- Admin Box -->
 <div class="card" id="adminBox" style="display:none;">
     <h2>Admin Login</h2>
     <input id="adminPass" type="password" placeholder="Enter admin password">
@@ -53,13 +53,13 @@ th, td { padding:10px; border:1px solid #ccc; }
 </div>
 
 <script>
-// Show admin login
+// Show admin login page
 function showAdmin() {
     document.getElementById('landing').style.display = 'none';
     document.getElementById('adminBox').style.display = 'block';
 }
 
-// Admin login logic
+// Admin login
 function loginAdmin() {
     const pass = document.getElementById("adminPass").value;
     if(pass !== "admin123") {
@@ -71,18 +71,20 @@ function loginAdmin() {
     loadOrders();
 }
 
-const API_URL = "https://script.google.com/macros/s/AKfycby531I65hFxYtMR1e6DLBK8ydH-Vgy2cKeiiFQ2N3ZKfNMt5sYzrz6UO4ZA1CajV-9yzQ/exec"; // <-- replace with your Apps Script Web App URL
+// Your correct Google Apps Script URL
+const API_URL = "https://script.google.com/macros/s/AKfycbzZ_n8d5kb6fk1UWuKF2dOS2-g4iC9nPtsj6bQvxIcszgGdTZv5zOM2WcuR2TBqfY5lNA/exec";
 
-// load orders and render table including action buttons
+// Load all orders from Google Sheets
 async function loadOrders() {
   try {
     const res = await fetch(API_URL);
     if (!res.ok) throw new Error("Network response not ok: " + res.status);
+
     const orders = await res.json();
     const table = document.getElementById("orderTable");
-    if (!table) return;
     table.innerHTML = "";
-    orders.forEach((order) => {
+
+    orders.forEach(order => {
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${escapeHtml(order.name)}</td>
@@ -105,32 +107,32 @@ async function loadOrders() {
   }
 }
 
-// update status for a specific sheet row number
+// Update status
 async function updateStatus(rowNumber, status) {
   try {
     const res = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "update", rowNumber: rowNumber, status: status })
+      body: JSON.stringify({ action: "update", rowNumber, status })
     });
+
     const data = await res.json();
-    if (data.result === "updated" || data.result === "updated") {
-      // update status cell in table if visible
-      const el = document.getElementById(`status-${rowNumber}`);
-      if (el) el.textContent = status;
+
+    if (data.result === "updated") {
+      document.getElementById(`status-${rowNumber}`).textContent = status;
     } else {
-      console.error(data);
-      alert("Could not update status. Check console.");
+      alert("Update failed. Check console.");
+      console.log(data);
     }
+
   } catch (err) {
     console.error(err);
     alert("Network error while updating status.");
   }
 }
 
-// small helper to avoid XSS when inserting into DOM
 function escapeHtml(text) {
-  if (text === null || text === undefined) return "";
+  if (!text) return "";
   return String(text)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -138,10 +140,7 @@ function escapeHtml(text) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-
 </script>
 
 </body>
 </html>
-
-
