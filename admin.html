@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    body { font-family: Arial; padding:20px; background:#eef1f5; }
+    .card { background:#fff; padding:20px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); max-width:900px; margin:auto; }
+    table { width:100%; border-collapse:collapse; margin-top:20px; }
+    th, td { padding:10px; border:1px solid #ccc; }
+    .btn { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; color:white; }
+    .accept { background:#2e7d32; }
+    .reject { background:#c62828; }
+    .complete { background:#1565c0; }
+    #loginBox input { width:100%; padding:12px; margin:10px 0; }
+</style>
+</head>
+<body>
+
+<div class="card" id="loginBox">
+    <h2>Admin Login</h2>
+    <input id="adminPass" type="password" placeholder="Enter admin password">
+    <button class="btn accept" onclick="login()">Login</button>
+    <p style="color:red; display:none;" id="loginError">Incorrect password</p>
+</div>
+
+<div class="card" id="adminPanel" style="display:none;">
+    <h2>All Orders</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Category</th>
+                <th>Items</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="orderTable"></tbody>
+    </table>
+</div>
+
+<script>
+function login() {
+    const pass = document.getElementById("adminPass").value;
+    if (pass !== "admin123") {
+        document.getElementById("loginError").style.display = "block";
+        return;
+    }
+
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("adminPanel").style.display = "block";
+    loadOrders();
+}
+
+function loadOrders() {
+    let orders = JSON.parse(localStorage.getItem("orders")) || [];
+    let table = document.getElementById("orderTable");
+    table.innerHTML = "";
+
+    orders.forEach((order, i) => {
+        let row = `
+            <tr>
+                <td>${order.name}</td>
+                <td>${order.phone}</td>
+                <td>${order.category}</td>
+                <td>${order.items}</td>
+                <td>${order.time}</td>
+                <td>${order.status}</td>
+                <td>
+                    <button class="btn accept" onclick="updateStatus(${i}, 'Accepted')">Accept</button>
+                    <button class="btn reject" onclick="updateStatus(${i}, 'Rejected')">Reject</button>
+                    <button class="btn complete" onclick="updateStatus(${i}, 'Completed')">Complete</button>
+                </td>
+            </tr>
+        `;
+        table.innerHTML += row;
+    });
+}
+
+function updateStatus(id, status) {
+    let orders = JSON.parse(localStorage.getItem("orders"));
+    orders[id].status = status;
+    localStorage.setItem("orders", JSON.stringify(orders));
+    loadOrders();
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Place Order</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    body { font-family: Arial; background:#f5f7fa; padding:20px; }
+    .card { background:#fff; padding:20px; max-width:450px; margin:auto; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+    input, textarea, select { width:100%; padding:10px; margin:10px 0; border-radius:6px; border:1px solid #ccc; }
+    button { width:100%; padding:12px; background:#2e7d32; color:white; border:none; border-radius:6px; cursor:pointer; font-size:16px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Place Your Order</h2>
+
+    <input id="name" placeholder="Your Name">
+    <input id="phone" placeholder="Phone Number">
+    <input id="category" placeholder="Category (Vegetables, Fruits, Dairy, etc)">
+    <textarea id="items" placeholder="Items (Example: Tomato - 2kg, Onion - 1kg)"></textarea>
+
+    <button onclick="submitOrder()">Submit Order</button>
+
+    <p id="msg" style="color:green; font-weight:bold; display:none; margin-top:10px;">
+        ✔ Order submitted! Admin will review it.
+    </p>
+</div>
+
+<script>
+function submitOrder() {
+    let order = {
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value,
+        category: document.getElementById("category").value,
+        items: document.getElementById("items").value,
+        status: "Pending",
+        time: new Date().toLocaleString()
+    };
+
+    // Get existing orders
+    let allOrders = JSON.parse(localStorage.getItem("orders")) || [];
+    allOrders.push(order);
+
+    // Save back to localStorage
+    localStorage.setItem("orders", JSON.stringify(allOrders));
+
+    document.getElementById("msg").style.display = "block";
+
+    // Clear the form
+    document.getElementById("name").value = "";
+    document.getElementById("phone").value = "";
+    document.getElementById("category").value = "";
+    document.getElementById("items").value = "";
+}
+</script>
+
+</body>
+</html>
