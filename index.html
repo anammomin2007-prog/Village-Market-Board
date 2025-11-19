@@ -71,40 +71,77 @@ function loginAdmin() {
     loadOrders();
 }
 
-// Load orders from localStorage
-function loadOrders() {
-    let orders = JSON.parse(localStorage.getItem("orders")) || [];
-    let table = document.getElementById("orderTable");
+const API_URL = "https://script.google.com/macros/s/AKfycby531I65hFxYtMR1e6DLBK8ydH-Vgy2cKeiiFQ2N3ZKfNMt5sYzrz6UO4ZA1CajV-9yzQ/exec"; // <-- replace with your Apps Script Web App URL
+
+// load orders and render table including action buttons
+async function loadOrders() {
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error("Network response not ok: " + res.status);
+    const orders = await res.json();
+    const table = document.getElementById("orderTable");
+    if (!table) return;
     table.innerHTML = "";
-
-    orders.forEach((order, i) => {
-        let row = `
-        <tr>
-            <td>${order.name}</td>
-            <td>${order.phone}</td>
-            <td>${order.category}</td>
-            <td>${order.items}</td>
-            <td>${order.time}</td>
-            <td>${order.status}</td>
-            <td>
-                <button class="btn accept" onclick="updateStatus(${i}, 'Accepted')">Accept</button>
-                <button class="btn reject" onclick="updateStatus(${i}, 'Rejected')">Reject</button>
-                <button class="btn complete" onclick="updateStatus(${i}, 'Completed')">Complete</button>
-            </td>
-        </tr>`;
-        table.innerHTML += row;
+    orders.forEach((order) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${escapeHtml(order.name)}</td>
+        <td>${escapeHtml(order.phone)}</td>
+        <td>${escapeHtml(order.category)}</td>
+        <td>${escapeHtml(order.items)}</td>
+        <td>${escapeHtml(order.time)}</td>
+        <td id="status-${order.rowNumber}">${escapeHtml(order.status)}</td>
+        <td>
+          <button class="btn accept" onclick="updateStatus(${order.rowNumber}, 'Accepted')">Accept</button>
+          <button class="btn reject" onclick="updateStatus(${order.rowNumber}, 'Rejected')">Reject</button>
+          <button class="btn complete" onclick="updateStatus(${order.rowNumber}, 'Completed')">Complete</button>
+        </td>
+      `;
+      table.appendChild(row);
     });
+  } catch (err) {
+    console.error(err);
+    alert("Failed to load orders. See console for details.");
+  }
 }
 
-// Update order status
-function updateStatus(id, status) {
-    let orders = JSON.parse(localStorage.getItem("orders")) || [];
-    orders[id].status = status;
-    localStorage.setItem("orders", JSON.stringify(orders));
-    loadOrders();
+// update status for a specific sheet row number
+async function updateStatus(rowNumber, status) {
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "update", rowNumber: rowNumber, status: status })
+    });
+    const data = await res.json();
+    if (data.result === "updated" || data.result === "updated") {
+      // update status cell in table if visible
+      const el = document.getElementById(`status-${rowNumber}`);
+      if (el) el.textContent = status;
+    } else {
+      console.error(data);
+      alert("Could not update status. Check console.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Network error while updating status.");
+  }
 }
+
+// small helper to avoid XSS when inserting into DOM
+function escapeHtml(text) {
+  if (text === null || text === undefined) return "";
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 </script>
 
 </body>
 </html>
+
 
