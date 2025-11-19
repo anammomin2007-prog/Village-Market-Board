@@ -55,6 +55,61 @@ function submitOrder() {
     document.getElementById("items").value = "";
 }
 </script>
+<!-- START: Order submit script -->
+<script>
+const API_URL = "YOUR_WEB_APP_URL"; // <-- replace with your Apps Script Web App URL
+
+async function placeOrder(name, phone, category, items) {
+  const payload = {
+    action: "insert",
+    name: name,
+    phone: phone,
+    category: category,
+    items: items,
+    time: new Date().toLocaleString(),
+    status: "Pending"
+  };
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.result === "inserted" || data.result === "inserted") {
+      alert("Order submitted!");
+      // Optional: clear form fields if you want:
+      const f = document.getElementById("orderForm");
+      if (f) f.reset();
+    } else {
+      console.error(data);
+      alert("Could not submit order. Check console for details.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Network error while submitting order.");
+  }
+}
+
+// If you have a form with id="orderForm", this will catch the submit and call placeOrder()
+document.addEventListener("DOMContentLoaded", function() {
+  const form = document.getElementById("orderForm");
+  if (form) {
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      // Change these selectors if your form uses different IDs/names
+      const name = document.getElementById("name") ? document.getElementById("name").value : "";
+      const phone = document.getElementById("phone") ? document.getElementById("phone").value : "";
+      const categoryEl = document.querySelector('input[name="category"]:checked');
+      const category = categoryEl ? categoryEl.value : (document.getElementById("category") ? document.getElementById("category").value : "");
+      const items = document.getElementById("items") ? document.getElementById("items").value : "";
+      placeOrder(name, phone, category, items);
+    });
+  }
+});
+</script>
 
 </body>
 </html>
+
