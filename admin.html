@@ -45,6 +45,8 @@
 </div>
 
 <script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzZ_n8d5kb6fk1UWuKF2dOS2-g4iC9nPtsj6bQvxIcszgGdTZv5zOM2WcuR2TBqfY5lNA/exec";
+
 function login() {
     const pass = document.getElementById("adminPass").value;
     if (pass !== "admin123") {
@@ -57,36 +59,58 @@ function login() {
     loadOrders();
 }
 
-function loadOrders() {
-    let orders = JSON.parse(localStorage.getItem("orders")) || [];
+async function loadOrders() {
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error("Network response not ok: " + res.status);
+
+    const orders = await res.json();
     let table = document.getElementById("orderTable");
     table.innerHTML = "";
 
-    orders.forEach((order, i) => {
-        let row = `
-            <tr>
-                <td>${order.name}</td>
-                <td>${order.phone}</td>
-                <td>${order.category}</td>
-                <td>${order.items}</td>
-                <td>${order.time}</td>
-                <td>${order.status}</td>
-                <td>
-                    <button class="btn accept" onclick="updateStatus(${i}, 'Accepted')">Accept</button>
-                    <button class="btn reject" onclick="updateStatus(${i}, 'Rejected')">Reject</button>
-                    <button class="btn complete" onclick="updateStatus(${i}, 'Completed')">Complete</button>
-                </td>
-            </tr>
-        `;
-        table.innerHTML += row;
+    orders.forEach(order => {
+      let row = `
+        <tr>
+            <td>${order.name}</td>
+            <td>${order.phone}</td>
+            <td>${order.category}</td>
+            <td>${order.items}</td>
+            <td>${order.time}</td>
+            <td id="status-${order.rowNumber}">${order.status}</td>
+            <td>
+                <button class="btn accept" onclick="updateStatus(${order.rowNumber}, 'Accepted')">Accept</button>
+                <button class="btn reject" onclick="updateStatus(${order.rowNumber}, 'Rejected')">Reject</button>
+                <button class="btn complete" onclick="updateStatus(${order.rowNumber}, 'Completed')">Complete</button>
+            </td>
+        </tr>`;
+      table.innerHTML += row;
     });
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to load orders. See console.");
+  }
 }
 
-function updateStatus(id, status) {
-    let orders = JSON.parse(localStorage.getItem("orders"));
-    orders[id].status = status;
-    localStorage.setItem("orders", JSON.stringify(orders));
-    loadOrders();
+async function updateStatus(rowNumber, status) {
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"update", rowNumber, status })
+    });
+
+    const data = await res.json();
+
+    if (data.result === "updated") {
+      document.getElementById(`status-${rowNumber}`).textContent = status;
+    } else {
+      alert("Failed to update.");
+    }
+
+  } catch (err) {
+    alert("Network error.");
+  }
 }
 </script>
 
